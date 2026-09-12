@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b2d4d">
+<title>PT6A-135A Evolution</title>
+<style>
+:root{--bg:#eef3f7;--card:#fff;--ink:#13212f;--muted:#64748b;--primary:#0b2d4d;--primary2:#174f78;--accent:#e8f2f9;--input:#fff6cf;--ok:#dff3e4;--warn:#fff0c2;--bad:#f7d5d8}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;padding:20px 18px 16px;position:sticky;top:0;z-index:5;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+header h1{margin:0;font-size:22px}header p{margin:5px 0 0;font-size:13px;opacity:.85}nav{display:flex;gap:8px;margin-top:14px;overflow:auto}
+nav button{border:0;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.14);color:white;font-weight:700;white-space:nowrap}nav button.active{background:white;color:var(--primary)}
+main{max-width:900px;margin:auto;padding:16px}.view{display:none}.view.active{display:block}.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(15,23,42,.08)}
+.card h2{margin:0 0 12px;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media(max-width:650px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+input{width:100%;border:1px solid #d5dde5;border-radius:12px;padding:14px;font-size:18px;background:var(--input);color:var(--ink)}
+.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:var(--accent);border-radius:14px;padding:14px}.metric small{display:block;color:var(--muted);font-weight:700;margin-bottom:4px}.metric strong{font-size:24px}
+.status{padding:12px 14px;border-radius:12px;margin-top:10px;font-weight:800}.ok{background:var(--ok)}.warn{background:var(--warn)}.bad{background:var(--bad)}
+button.primary{width:100%;border:0;border-radius:12px;padding:14px;background:var(--primary);color:white;font-weight:800;font-size:16px}
+button.secondary{width:100%;border:0;border-radius:12px;padding:12px;background:#dbe8f2;color:var(--primary);font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 7px;border-bottom:1px solid #e7edf2;text-align:right}th:first-child,td:first-child{text-align:left}
+.note{font-size:13px;color:var(--muted);line-height:1.45}.danger-note{background:#fff7e8;border-left:4px solid #d99d2b;padding:12px;border-radius:8px}
+canvas{width:100%;height:260px;background:white;border-radius:12px}.row-actions{display:flex;gap:8px}.row-actions button{flex:1}footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 16px 24px}
+</style>
+</head>
+<body>
+<header><h1>PT6A-135A Evolution</h1><p>Offline performance & engine trend tool</p>
+<nav><button class="tab active" data-view="calculator">Calculator</button><button class="tab" data-view="trend">Trend Log</button><button class="tab" data-view="limits">Limits</button></nav></header>
+<main>
+<section id="calculator" class="view active">
+<div class="card"><h2>Flight / Engine Inputs</h2><div class="grid">
+<div><label>Pressure Altitude (ft)</label><input id="alt" type="number" value="24000"></div>
+<div><label>OAT (°C)</label><input id="oat" type="number" value="-20"></div>
+<div><label>Torque (lb-ft)</label><input id="torque" type="number" value="1200"></div>
+<div><label>Prop RPM</label><input id="np" type="number" value="1750"></div>
+<div><label>Jet-A Density (lb/gal)</label><input id="density" type="number" step="0.01" value="6.70"></div>
+<div><label>Actual ITT (°C, optional)</label><input id="itt" type="number" placeholder="Enter actual"></div>
+<div><label>Actual Ng (%, optional)</label><input id="ng" type="number" step="0.1" placeholder="Enter actual"></div>
+<div><label>Actual Fuel Flow (GPH, optional)</label><input id="actualFF" type="number" step="0.1" placeholder="Enter actual"></div>
+</div></div>
+<div class="card"><h2>Calculated / Reference</h2><div class="metric-grid">
+<div class="metric"><small>ISA Temp</small><strong id="isa">—</strong></div><div class="metric"><small>ΔISA</small><strong id="disa">—</strong></div>
+<div class="metric"><small>Shaft HP</small><strong id="shp">—</strong></div><div class="metric"><small>Torque Pressure</small><strong id="tqpsi">—</strong></div>
+<div class="metric"><small>Predicted FF</small><strong id="ff">—</strong></div><div class="metric"><small>Predicted FF</small><strong id="fflbs">—</strong></div>
+</div><div id="status"></div></div>
+<div class="card"><h2>Fuel Flow vs Altitude</h2><canvas id="profile" width="700" height="260"></canvas><p class="note">Profile assumes the selected torque, prop RPM, and ΔISA.</p></div>
+<div class="card"><button class="primary" id="saveReading">Save Current Reading to Trend Log</button></div>
+</section>
+<section id="trend" class="view"><div class="card"><h2>Known-Good Baseline</h2><div class="grid">
+<div><label>Baseline ITT °C</label><input id="baseITT" type="number"></div><div><label>Baseline Ng %</label><input id="baseNg" type="number" step="0.1"></div>
+</div><div style="margin-top:12px"><button class="secondary" id="saveBaseline">Save Baseline</button></div></div>
+<div class="card"><h2>Saved Trend Readings</h2><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Alt</th><th>OAT</th><th>Tq</th><th>Np</th><th>ITT</th><th>Ng</th><th>FF</th><th>Pred FF</th><th>ΔFF</th></tr></thead><tbody id="trendBody"></tbody></table></div>
+<div class="row-actions" style="margin-top:12px"><button class="secondary" id="exportCsv">Export CSV</button><button class="secondary" id="clearLog">Clear Log</button></div></div></section>
+<section id="limits" class="view"><div class="card"><h2>PT6A-135A Published Limits</h2><table><tbody>
+<tr><td>Takeoff / Max Continuous SHP</td><td>750 SHP</td></tr><tr><td>Max Torque</td><td>2,080 lb-ft</td></tr><tr><td>Max Torque Pressure</td><td>59.1 psi</td></tr>
+<tr><td>Max Observed ITT</td><td>805 °C</td></tr><tr><td>Max Ng</td><td>101.6%</td></tr><tr><td>Max Np</td><td>1,900 RPM</td></tr>
+<tr><td>Normal Oil Pressure</td><td>85–105 psig</td></tr><tr><td>Oil Temperature</td><td>10–99 °C</td></tr></tbody></table></div>
+<div class="card danger-note"><strong>Advisory use only.</strong><p class="note">This app does not replace the Lancair Evolution POH/AFM, P&WC operating instructions, maintenance manual, or approved engine performance-check data. Fuel flow is an engineering estimate derived from published PT6A-135A installation data. ITT and Ng are intended for limit checking and trend comparison against your own stabilized baseline.</p></div></section>
+</main><footer>PT6A-135A Evolution • Offline Android app</footer><script src="app.js"></script></body></html>
